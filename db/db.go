@@ -24,6 +24,8 @@ type DB struct {
 	AttemptsWS  dao.AttemptDAO
 	Sources     dao.SourceDAO
 	SourcesWS   dao.SourceDAO
+	Plugins     dao.PluginDAO
+	PluginsWS   dao.PluginDAO
 }
 
 func initSqlxDB(cfg *config.DatabaseConfig) (*sqlx.DB, error) {
@@ -56,6 +58,8 @@ func NewDB(cfg *config.DatabaseConfig) (*DB, error) {
 		AttemptsWS:  dao.NewAttemptDao(sqlxDB, true),
 		Sources:     dao.NewSourceDAO(sqlxDB, false),
 		SourcesWS:   dao.NewSourceDAO(sqlxDB, true),
+		Plugins:     dao.NewPluginDAO(sqlxDB, false),
+		PluginsWS:   dao.NewPluginDAO(sqlxDB, true),
 	}
 
 	return db, nil

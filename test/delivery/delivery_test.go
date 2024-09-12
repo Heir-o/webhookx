@@ -13,6 +13,7 @@ import (
 	"github.com/webhookx-io/webhookx/db/query"
 	"github.com/webhookx-io/webhookx/test/helper"
 	"github.com/webhookx-io/webhookx/utils"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -29,6 +30,13 @@ var _ = Describe("delivery", Ordered, func() {
 			Endpoints: []*entities.Endpoint{helper.DefaultEndpoint()},
 			Sources:   []*entities.Source{helper.DefaultSource()},
 		}
+		entitiesConfig.Plugins = []*entities.Plugin{{
+			ID:         utils.KSUID(),
+			EndpointId: entitiesConfig.Endpoints[0].ID,
+			Name:       "webhookx-signature",
+			Enabled:    true,
+			Config:     []byte(`{"key":"abcdefg"}`),
+		}}
 
 		BeforeAll(func() {
 			db = helper.InitDB(true, &entitiesConfig)
@@ -69,6 +77,12 @@ var _ = Describe("delivery", Ordered, func() {
 			}, time.Second*15, time.Second)
 
 			assert.Equal(GinkgoT(), entitiesConfig.Endpoints[0].ID, attempt.EndpointId)
+			signature := attempt.Request.Headers["Webhookx-Signature"]
+			timestamp := attempt.Request.Headers["Webhookx-Timestamp"]
+			delete(attempt.Request.Headers, "Webhookx-Signature")
+			delete(attempt.Request.Headers, "Webhookx-Timestamp")
+			assert.Regexp(GinkgoT(), "v1=[0-9a-f]{64}", signature)
+			assert.True(GinkgoT(), utils.Must(strconv.ParseInt(timestamp, 10, 0)) >= attempt.AttemptedAt.Unix())
 			assert.Equal(GinkgoT(), &entities.AttemptRequest{
 				Method: "POST",
 				URL:    "http://localhost:9999/anything",

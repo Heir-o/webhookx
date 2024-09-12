@@ -100,6 +100,7 @@ type EntitiesConfig struct {
 	Sources   []*entities.Source
 	Events    []*entities.Event
 	Attempts  []*entities.Attempt
+	Plugins   []*entities.Plugin
 }
 
 func InitDB(truncated bool, entities *EntitiesConfig) *db.DB {
@@ -151,6 +152,14 @@ func InitDB(truncated bool, entities *EntitiesConfig) *db.DB {
 	for _, e := range entities.Attempts {
 		e.WorkspaceId = ws.ID
 		err = db.Attempts.Insert(context.TODO(), e)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, e := range entities.Plugins {
+		e.WorkspaceId = ws.ID
+		err = db.Plugins.Insert(context.TODO(), e)
 		if err != nil {
 			panic(err)
 		}
